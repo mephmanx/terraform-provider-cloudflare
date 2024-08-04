@@ -14,11 +14,11 @@ jobs:
         with:
           fetch-depth: 0 # needed for `only-new-issues` to compare diffs
       - name: Set up Go
-        uses: actions/setup-go@v4
+        uses: actions/setup-go@v5
         with:
           go-version-file: 'tools/go.mod'
       - name: golangci-lint
-        uses: golangci/golangci-lint-action@v3
+        uses: golangci/golangci-lint-action@v6
         with:
           version: latest
           args: "--config .golintci.yml"
@@ -33,7 +33,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - name: Set up Go
-        uses: actions/setup-go@v4
+        uses: actions/setup-go@v5
         with:
           go-version-file: 'tools/go.mod'
       - run: make terraform-provider-lint

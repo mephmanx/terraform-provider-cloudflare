@@ -18,6 +18,11 @@ resource "cloudflare_teams_account" "example" {
     enabled_download_phase = true
     enabled_upload_phase   = false
     fail_closed            = true
+    notification_settings {
+      enabled     = true
+      message     = "you are blocked"
+      support_url = "https://example.com/blocked"
+    }
   }
 
   fips {
@@ -25,9 +30,10 @@ resource "cloudflare_teams_account" "example" {
   }
 
   proxy {
-    tcp     = true
-    udp     = true
-    root_ca = true
+    tcp        = true
+    udp        = true
+    root_ca    = true
+    virtual_ip = false
   }
 
   url_browser_isolation_enabled = true
@@ -48,5 +54,9 @@ resource "cloudflare_teams_account" "example" {
         log_blocks = true
       }
     }
+  }
+
+  extended_email_matching {
+    enabled = true
   }
 }

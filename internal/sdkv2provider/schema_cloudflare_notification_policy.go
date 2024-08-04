@@ -2,12 +2,107 @@ package sdkv2provider
 
 import (
 	"fmt"
+	"sort"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 
 	"github.com/cloudflare/terraform-provider-cloudflare/internal/consts"
 )
+
+var notificationAffectedComponents = map[string]string{
+	"Access":                              "w4k8yvhfb3vp",
+	"Always Online":                       "xm3cq0t85y10",
+	"Analytics":                           "4c231tkdlpcl",
+	"API":                                 "g4tb35rs9yw7",
+	"API Shield":                          "g9yx473yjk9t",
+	"Apps Marketplace":                    "g9dgngpcdt1x",
+	"Argo Smart Routing":                  "z9w398bsjvnq",
+	"Audit Logs":                          "2469qcw8rvjp",
+	"Authoritative DNS":                   "dp8ppfycqxcs",
+	"Billing":                             "ll1x88wwz4fq",
+	"Bring Your Own IP (BYOIP)":           "4msl4k5wdcbv",
+	"Browser Isolation":                   "q0dfbn0p6hyt",
+	"Bot Management":                      "s0991jwsqllx",
+	"Cache Reserve":                       "3q1jnbdbn845",
+	"CDN/Cache":                           "5wnz34mhfhrk",
+	"CDN Cache Purge":                     "fbvx0hxhhdj0",
+	"Challenge Platform":                  "x0tkn0hzrtw7",
+	"Cloud Access Security Broker (CASB)": "h2p0jj4ltvcq",
+	"Community Site":                      "qgh1bfr4hxrl",
+	"Data Loss Prevention (DLP)":          "rppy995xymxv",
+	"Dashboard":                           "3sq3s4d20ywk",
+	"Developer's Site":                    "rzcwwk4rgb0w",
+	"Digital Experience Monitoring (DEX)": "nmp96vgn1hpl",
+	"Distributed Web Gateway":             "5scwd3vmnsyj",
+	"DNS Root Servers":                    "4l9qztbt6rbj",
+	"DNS Updates":                         "7j656z7tqk7f",
+	"Durable Objects":                     "bty1yz6dhh0v",
+	"Email Routing":                       "gjb0yzvvrpf6",
+	"Ethereum Gateway":                    "7yyjz9qdsjbx",
+	"Firewall":                            "d1r0plwsl5qb",
+	"Gateway":                             "gyx2yygg7lmd",
+	"Geo-Key Manager":                     "4tw744y7kfmw",
+	"Image Resizing":                      "dw7t39j5syzl",
+	"Images":                              "3lbj8lp3d750",
+	"Infrastructure":                      "8qwmwg7ytljv",
+	"Load Balancing and Monitoring":       "8sn2w5kyxfnp",
+	"Lists":                               "tfnrx45s2b48",
+	"Logs":                                "k0mgxrls5y1b",
+	"Magic Firewall":                      "m1cm5tqpkqtm",
+	"Magic Transit":                       "bjlxcss20fsl",
+	"Magic WAN":                           "qgnxz00j1f2v",
+	"Magic WAN Connector":                 "q3t6mnpmpgt8",
+	"Marketing Site":                      "6239kkkfzfnf",
+	"Mirage":                              "j9jl2gb9zywx",
+	"Network":                             "4n0gb0kh02gf",
+	"Notifications":                       "5xvn0m7tthlf",
+	"Observatory":                         "mfty6kskddpf",
+	"Page Shield":                         "hk5dqm69klkp",
+	"Pages":                               "vgxj684rcw7t",
+	"R2":                                  "hb7g5sq2zz0h",
+	"Radar":                               "0fw91jq1bzxx",
+	"Randomness Beacon":                   "yd553hxj8dbj",
+	"Recursive DNS":                       "8w536gxk7dvq",
+	"Registrar":                           "kn2xkt469vyh",
+	"Registration Data Access Protocol (RDAP)": "vsj8h17tq59r",
+	"Security Center":                          "18qkc83zzmxb",
+	"Snippets":                                 "570kfpd0dgg7",
+	"Spectrum":                                 "6dd6ssg7plt0",
+	"Speed Optimizations":                      "fcx388ss9k9x",
+	"Stream":                                   "47xg28c02lnk",
+	"SSL Certificate Provisioning":             "cghykwlwsmn5",
+	"SSL for SaaS Provisioning":                "9p2qlpt19nqb",
+	"Support Site":                             "jzcwkvrc4w4q",
+	"Time Services":                            "ggcvp9h5v6rv",
+	"Trace":                                    "f0jjgwcxtmk8",
+	"Tunnel":                                   "y98zlwj1d7zh",
+	"Turnstile":                                "m4jywscr0n0k",
+	"Waiting Room":                             "9c7cbxnhk1dq",
+	"WARP":                                     "k04jkcpzxn94",
+	"Web Analytics":                            "qt59p3cr1grx",
+	"Workers":                                  "57srcl8zcn7c",
+	"Workers Preview":                          "wjvmzdf21d4l",
+	"Workers KV":                               "tmh50tx2nprs",
+	"Zaraz":                                    "qgt2kv10g1yn",
+	"Zero Trust":                               "kf0ktv29xrfy",
+	"Zero Trust Dashboard":                     "276xk3r83js7",
+	"Zone Versioning":                          "4tv81hqpt2jt",
+}
+
+func affectedComponentKeys() []string {
+	var keys []string
+
+	for key := range notificationAffectedComponents {
+		keys = append(keys, key)
+	}
+
+	sort.Slice(keys, func(i, j int) bool {
+		return keys[i] < keys[j]
+	})
+
+	return keys
+}
 
 var notificationPolicyAlertTypes = []string{
 	"advanced_http_alert_error",
@@ -59,6 +154,7 @@ var notificationPolicyAlertTypes = []string{
 	"secondary_dns_zone_validation_warning",
 	"sentinel_alert",
 	"stream_live_notifications",
+	"traffic_anomalies_alert",
 	"tunnel_health_event",
 	"tunnel_update_event",
 	"universal_ssl_event_type",
@@ -118,19 +214,19 @@ func resourceCloudflareNotificationPolicySchema() map[string]*schema.Schema {
 			Type:        schema.TypeSet,
 			Optional:    true,
 			Elem:        mechanismData,
-			Description: "The email id to which the notification should be dispatched. One of email, webhooks, or PagerDuty mechanisms is required.",
+			Description: "The email ID to which the notification should be dispatched.",
 		},
 		"webhooks_integration": {
 			Type:        schema.TypeSet,
 			Optional:    true,
 			Elem:        mechanismData,
-			Description: "The unique id of a configured webhooks endpoint to which the notification should be dispatched. One of email, webhooks, or PagerDuty mechanisms is required.",
+			Description: "The unique ID of a configured webhooks endpoint to which the notification should be dispatched.",
 		},
 		"pagerduty_integration": {
 			Type:        schema.TypeSet,
 			Optional:    true,
 			Elem:        mechanismData,
-			Description: "The unique id of a configured pagerduty endpoint to which the notification should be dispatched. One of email, webhooks, or PagerDuty mechanisms is required.",
+			Description: "The unique ID of a configured pagerduty endpoint to which the notification should be dispatched.",
 		},
 	}
 }
@@ -161,6 +257,18 @@ func notificationPolicyFilterSchema() *schema.Schema {
 					Elem:        &schema.Schema{Type: schema.TypeString},
 					Optional:    true,
 					Description: "Targeted actions for alert.",
+				},
+				"airport_code": {
+					Type:        schema.TypeSet,
+					Elem:        &schema.Schema{Type: schema.TypeString},
+					Optional:    true,
+					Description: "Filter on Points of Presence.",
+				},
+				"affected_components": {
+					Type:        schema.TypeSet,
+					Elem:        &schema.Schema{Type: schema.TypeString},
+					Optional:    true,
+					Description: fmt.Sprintf("Affected components for alert. %s", renderAvailableDocumentationValuesStringSlice(affectedComponentKeys())),
 				},
 				"status": {
 					Type:        schema.TypeSet,
@@ -278,6 +386,14 @@ func notificationPolicyFilterSchema() *schema.Schema {
 					Optional:    true,
 					Description: "Target host to alert on for dos.",
 				},
+				"target_ip": {
+					Type: schema.TypeSet,
+					Elem: &schema.Schema{
+						Type: schema.TypeString,
+					},
+					Optional:    true,
+					Description: "Target ip to alert on for dos in CIDR notation.",
+				},
 				"packets_per_second": {
 					Type: schema.TypeSet,
 					Elem: &schema.Schema{
@@ -381,6 +497,30 @@ func notificationPolicyFilterSchema() *schema.Schema {
 					},
 					Optional:    true,
 					Description: "Tunnel health status to alert on.",
+				},
+				"selectors": {
+					Type: schema.TypeSet,
+					Elem: &schema.Schema{
+						Type: schema.TypeString,
+					},
+					Optional:    true,
+					Description: "Selectors for alert. Valid options depend on the alert type.",
+				},
+				"tunnel_id": {
+					Type: schema.TypeSet,
+					Elem: &schema.Schema{
+						Type: schema.TypeString,
+					},
+					Optional:    true,
+					Description: "Tunnel IDs to alert on.",
+				},
+				"tunnel_name": {
+					Type: schema.TypeSet,
+					Elem: &schema.Schema{
+						Type: schema.TypeString,
+					},
+					Optional:    true,
+					Description: "Tunnel Names to alert on.",
 				},
 			},
 		},

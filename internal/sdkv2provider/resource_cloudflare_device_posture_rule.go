@@ -166,7 +166,7 @@ func setDevicePostureRuleInput(rule *cloudflare.DevicePostureRule, d *schema.Res
 			input.Path = p.(string)
 		}
 		if exists, ok := d.GetOk("input.0.exists"); ok {
-			input.Exists = exists.(bool)
+			input.Exists = cloudflare.BoolPtr(exists.(bool))
 		}
 		if tp, ok := d.GetOk("input.0.thumbprint"); ok {
 			input.Thumbprint = tp.(string)
@@ -175,10 +175,10 @@ func setDevicePostureRuleInput(rule *cloudflare.DevicePostureRule, d *schema.Res
 			input.Sha256 = s.(string)
 		}
 		if running, ok := d.GetOk("input.0.running"); ok {
-			input.Running = running.(bool)
+			input.Running = cloudflare.BoolPtr(running.(bool))
 		}
 		if require_all, ok := d.GetOk("input.0.require_all"); ok {
-			input.RequireAll = require_all.(bool)
+			input.RequireAll = cloudflare.BoolPtr(require_all.(bool))
 		}
 		if check_disks, ok := d.GetOk("input.0.check_disks"); ok {
 			values := check_disks.(*schema.Set).List()
@@ -187,7 +187,7 @@ func setDevicePostureRuleInput(rule *cloudflare.DevicePostureRule, d *schema.Res
 			}
 		}
 		if enabled, ok := d.GetOk("input.0.enabled"); ok {
-			input.Enabled = enabled.(bool)
+			input.Enabled = cloudflare.BoolPtr(enabled.(bool))
 		}
 		if version, ok := d.GetOk("input.0.version"); ok {
 			input.Version = version.(string)
@@ -210,6 +210,9 @@ func setDevicePostureRuleInput(rule *cloudflare.DevicePostureRule, d *schema.Res
 		if osDistroRevision, ok := d.GetOk("input.0.os_distro_revision"); ok {
 			input.OsDistroRevision = osDistroRevision.(string)
 		}
+		if osVersionExtra, ok := d.GetOk("input.0.os_version_extra"); ok {
+			input.OSVersionExtra = osVersionExtra.(string)
+		}
 		if os, ok := d.GetOk("input.0.os"); ok {
 			input.Os = os.(string)
 		}
@@ -221,6 +224,12 @@ func setDevicePostureRuleInput(rule *cloudflare.DevicePostureRule, d *schema.Res
 		}
 		if versionOperator, ok := d.GetOk("input.0.version_operator"); ok {
 			input.VersionOperator = versionOperator.(string)
+		}
+		if state, ok := d.GetOk("input.0.state"); ok {
+			input.State = state.(string)
+		}
+		if last_seen, ok := d.GetOk("input.0.last_seen"); ok {
+			input.LastSeen = last_seen.(string)
 		}
 		if countOperator, ok := d.GetOk("input.0.count_operator"); ok {
 			input.CountOperator = countOperator.(string)
@@ -241,10 +250,10 @@ func setDevicePostureRuleInput(rule *cloudflare.DevicePostureRule, d *schema.Res
 			input.NetworkStatus = networkStatus.(string)
 		}
 		if infected, ok := d.GetOk("input.0.infected"); ok {
-			input.Infected = infected.(bool)
+			input.Infected = cloudflare.BoolPtr(infected.(bool))
 		}
 		if isActive, ok := d.GetOk("input.0.is_active"); ok {
-			input.IsActive = isActive.(bool)
+			input.IsActive = cloudflare.BoolPtr(isActive.(bool))
 		}
 		if eidLastSeen, ok := d.GetOk("input.0.eid_last_seen"); ok {
 			input.EidLastSeen = eidLastSeen.(string)
@@ -304,6 +313,7 @@ func convertInputToSchema(input cloudflare.DevicePostureRuleInput) []map[string]
 		"version":            input.Version,
 		"os_distro_name":     input.OsDistroName,
 		"os_distro_revision": input.OsDistroRevision,
+		"os_version_extra":   input.OSVersionExtra,
 		"operator":           input.Operator,
 		"domain":             input.Domain,
 		"compliance_status":  input.ComplianceStatus,

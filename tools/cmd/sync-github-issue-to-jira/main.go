@@ -75,6 +75,7 @@ var (
 
 		"service/access",
 		"service/cache",
+		"service/dns",
 		"service/iam",
 		"service/load_balancing",
 		"service/logs",
@@ -88,6 +89,8 @@ var (
 		"service/bot_management",
 		"service/addressing",
 		"service/zero_trust_devices",
+		"service/lists",
+		"service/firewall",
 	}
 
 	// Mapping of service label to owning internal team.
@@ -150,11 +153,23 @@ var (
 		},
 		"service/addressing": {
 			teamName: "Address",
-			owner: "jabley",
+			owner:    "jabley",
 		},
 		"service/zero_trust_devices": {
 			teamName: "ZT Device Services",
-			owner: "suhrit",
+			owner:    "suhrit",
+		},
+		"service/dns": {
+			teamName: "DNS",
+			owner:    "elmerot",
+		},
+		"service/lists": {
+			teamName: "WAF (FW, RL, MR)",
+			owner:    "jborys",
+		},
+		"service/firewall": {
+			teamName: "WAF (FW, RL, MR)",
+			owner:    "jborys",
 		},
 	}
 )

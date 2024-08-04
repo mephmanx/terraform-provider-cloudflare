@@ -79,6 +79,41 @@ func TestAccCloudflareDevicePostureRule_OsVersion(t *testing.T) {
 	})
 }
 
+func TestAccCloudflareDevicePostureRule_OsVersionExtra(t *testing.T) {
+	// Temporarily unset CLOUDFLARE_API_TOKEN if it is set as the Access
+	// service does not yet support the API tokens and it results in
+	// misleading state error messages.
+	if os.Getenv("CLOUDFLARE_API_TOKEN") != "" {
+		t.Setenv("CLOUDFLARE_API_TOKEN", "")
+	}
+
+	rnd := generateRandomResourceName()
+	name := fmt.Sprintf("cloudflare_device_posture_rule.%s", rnd)
+
+	resource.Test(t, resource.TestCase{
+		PreCheck: func() {
+			testAccPreCheck(t)
+		},
+		ProviderFactories: providerFactories,
+		CheckDestroy:      testAccCheckCloudflareDevicePostureRuleDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccCloudflareDevicePostureRuleConfigOsVersionExtra(rnd, accountID),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(name, consts.AccountIDSchemaKey, accountID),
+					resource.TestCheckResourceAttr(name, "name", rnd),
+					resource.TestCheckResourceAttr(name, "type", "os_version"),
+					resource.TestCheckResourceAttr(name, "description", "My description"),
+					resource.TestCheckResourceAttr(name, "match.0.platform", "mac"),
+					resource.TestCheckResourceAttr(name, "input.0.version", "10.0.1"),
+					resource.TestCheckResourceAttr(name, "input.0.operator", "=="),
+					resource.TestCheckResourceAttr(name, "input.0.os_version_extra", "(a)"),
+				),
+			},
+		},
+	})
+}
+
 func TestAccCloudflareDevicePostureRule_LinuxOsDistro(t *testing.T) {
 	// Temporarily unset CLOUDFLARE_API_TOKEN if it is set as the Access
 	// service does not yet support the API tokens and it results in
@@ -254,6 +289,48 @@ func TestAccCloudflareDevicePostureRule_DiskEncryption_CheckDisks(t *testing.T) 
 	})
 }
 
+func TestAccCloudflareDevicePostureRule_Intune(t *testing.T) {
+	skipForDefaultAccount(t, "Assertion requires active Intune license.")
+
+	// Temporarily unset CLOUDFLARE_API_TOKEN if it is set as the Access
+	// service does not yet support the API tokens and it results in
+	// misleading state error messages.
+	if os.Getenv("CLOUDFLARE_API_TOKEN") != "" {
+		t.Setenv("CLOUDFLARE_API_TOKEN", "")
+	}
+
+	if v := os.Getenv("CLOUDFLARE_DEVICE_POSTURE_INTUNE_CONNECTION_ID"); v == "" {
+		t.Fatal("CLOUDFLARE_DEVICE_POSTURE_INTUNE_CONNECTION_ID must be set for this acceptance test")
+	}
+
+	rnd := generateRandomResourceName()
+	name := fmt.Sprintf("cloudflare_device_posture_rule.%s", rnd)
+	connectionID := os.Getenv("CLOUDFLARE_DEVICE_POSTURE_INTUNE_CONNECTION_ID")
+	resource.Test(t, resource.TestCase{
+		PreCheck: func() {
+			testAccPreCheck(t)
+		},
+		ProviderFactories: providerFactories,
+		CheckDestroy:      testAccCheckCloudflareDevicePostureRuleDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccCloudflareDevicePostureRuleIntune(rnd, accountID, connectionID),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(name, consts.AccountIDSchemaKey, accountID),
+					resource.TestCheckResourceAttr(name, "name", rnd),
+					resource.TestCheckResourceAttr(name, "type", "intune"),
+					resource.TestCheckResourceAttr(name, "description", "intune compliance status"),
+					resource.TestCheckResourceAttr(name, "schedule", "24h"),
+					resource.TestCheckResourceAttr(name, "expiration", "24h"),
+					resource.TestCheckResourceAttr(name, "match.0.platform", "mac"),
+					resource.TestCheckResourceAttr(name, "input.0.compliance_status", "compliant"),
+					resource.TestCheckResourceAttr(name, "input.0.connection_id", connectionID),
+				),
+			},
+		},
+	})
+}
+
 func testAccCloudflareDevicePostureRuleConfigSerialNumber(rnd, accountID string) string {
 	return fmt.Sprintf(`
 resource "cloudflare_device_posture_rule" "%[1]s" {
@@ -288,6 +365,27 @@ resource "cloudflare_device_posture_rule" "%[1]s" {
 	input {
 		version = "10.0.1"
 		operator = "=="
+	}
+}
+`, rnd, accountID)
+}
+
+func testAccCloudflareDevicePostureRuleConfigOsVersionExtra(rnd, accountID string) string {
+	return fmt.Sprintf(`
+resource "cloudflare_device_posture_rule" "%[1]s" {
+	account_id                = "%[2]s"
+	name                      = "%[1]s"
+	type                      = "os_version"
+	description               = "My description"
+	schedule                  = "24h"
+	expiration                = "24h"
+	match {
+		platform = "mac"
+	}
+	input {
+		version = "10.0.1"
+		operator = "=="
+		os_version_extra = "(a)"
 	}
 }
 `, rnd, accountID)
@@ -407,4 +505,24 @@ func testAccCheckCloudflareDevicePostureRuleDestroy(s *terraform.State) error {
 	}
 
 	return nil
+}
+
+func testAccCloudflareDevicePostureRuleIntune(rnd, accountID, connectionID string) string {
+	return fmt.Sprintf(`
+resource "cloudflare_device_posture_rule" "%[1]s" {
+	account_id                = "%[2]s"
+	name                      = "%[1]s"
+	type                      = "intune"
+	description               = "intune compliance status"
+	schedule                  = "24h"
+	expiration                = "24h"
+	match {
+		platform = "mac"
+	}
+	input {
+		compliance_status = "compliant"
+		connection_id = "%[3]s"
+	}
+}
+`, rnd, accountID, connectionID)
 }

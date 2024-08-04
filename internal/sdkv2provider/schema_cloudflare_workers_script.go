@@ -134,6 +134,21 @@ var queueBindingResource = &schema.Resource{
 	},
 }
 
+var d1BindingResource = &schema.Resource{
+	Schema: map[string]*schema.Schema{
+		"name": {
+			Type:        schema.TypeString,
+			Required:    true,
+			Description: "The global variable for the binding in your Worker code.",
+		},
+		"database_id": {
+			Type:        schema.TypeString,
+			Required:    true,
+			Description: "Database ID of D1 database to use.",
+		},
+	},
+}
+
 var placementResource = &schema.Resource{
 	Schema: map[string]*schema.Schema{
 		"mode": {
@@ -192,6 +207,18 @@ func resourceCloudflareWorkerScriptSchema() map[string]*schema.Schema {
 			Optional: true,
 			Elem:     placementResource,
 		},
+		"dispatch_namespace": {
+			Type:        schema.TypeString,
+			Optional:    true,
+			Description: "Name of the Workers for Platforms dispatch namespace.",
+		},
+		"tags": {
+			Type:     schema.TypeSet,
+			Optional: true,
+			Elem:     &schema.Schema{Type: schema.TypeString},
+			Computed: true,
+		},
+		// TODO: dispatch_namespace binding
 		"plain_text_binding": {
 			Type:     schema.TypeSet,
 			Optional: true,
@@ -231,6 +258,11 @@ func resourceCloudflareWorkerScriptSchema() map[string]*schema.Schema {
 			Type:     schema.TypeSet,
 			Optional: true,
 			Elem:     queueBindingResource,
+		},
+		"d1_database_binding": {
+			Type:     schema.TypeSet,
+			Optional: true,
+			Elem:     d1BindingResource,
 		},
 	}
 }

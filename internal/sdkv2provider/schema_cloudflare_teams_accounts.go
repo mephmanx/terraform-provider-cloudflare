@@ -113,6 +113,25 @@ func resourceCloudflareTeamsAccountSchema() map[string]*schema.Schema {
 			},
 			Description: "Configuration for DLP Payload Logging.",
 		},
+		"extended_email_matching": {
+			Type:        schema.TypeList,
+			MaxItems:    1,
+			Optional:    true,
+			Computed:    true,
+			Description: "Configuration for extended e-mail matching.",
+			Elem: &schema.Resource{
+				Schema: extendedEmailMatchingSchema,
+			},
+		},
+		"custom_certificate": {
+			Type:        schema.TypeList,
+			MaxItems:    1,
+			Optional:    true,
+			Description: "Configuration for custom certificates / BYO-PKI.",
+			Elem: &schema.Resource{
+				Schema: customCertificateSchema,
+			},
+		},
 	}
 }
 
@@ -196,6 +215,15 @@ var antivirusSchema = map[string]*schema.Schema{
 		Required:    true,
 		Description: "Block requests for files that cannot be scanned.",
 	},
+	"notification_settings": {
+		Type:        schema.TypeList,
+		MaxItems:    1,
+		Optional:    true,
+		Description: "Set notifications for antivirus",
+		Elem: &schema.Resource{
+			Schema: notificationSettings,
+		},
+	},
 }
 
 var proxySchema = map[string]*schema.Schema{
@@ -213,6 +241,11 @@ var proxySchema = map[string]*schema.Schema{
 		Type:        schema.TypeBool,
 		Required:    true,
 		Description: "Whether root ca is enabled account wide for ZT clients.",
+	},
+	"virtual_ip": {
+		Type:        schema.TypeBool,
+		Required:    true,
+		Description: "Whether virtual IP (CGNAT) is enabled account wide and will override existing local interface IP for ZT clients.",
 	},
 }
 
@@ -286,5 +319,31 @@ var payloadLogSchema = map[string]*schema.Schema{
 		Type:        schema.TypeString,
 		Required:    true,
 		Description: "Public key used to encrypt matched payloads.",
+	},
+}
+
+var extendedEmailMatchingSchema = map[string]*schema.Schema{
+	"enabled": {
+		Type:        schema.TypeBool,
+		Required:    true,
+		Description: "Whether e-mails should be matched on all variants of user emails (with + or . modifiers) in Firewall policies.",
+	},
+}
+
+var customCertificateSchema = map[string]*schema.Schema{
+	"enabled": {
+		Type:        schema.TypeBool,
+		Required:    true,
+		Description: "Whether TLS encryption should use a custom certificate.",
+	},
+	"id": {
+		Type:        schema.TypeString,
+		Optional:    true,
+		Computed:    true,
+		Description: "ID of custom certificate.",
+	},
+	"updated_at": {
+		Type:     schema.TypeString,
+		Computed: true,
 	},
 }

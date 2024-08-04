@@ -106,6 +106,11 @@ var teamsRuleSettings = map[string]*schema.Schema{
 		Optional:    true,
 		Description: "Turns on IP category based filter on dns if the rule contains dns category checks.",
 	},
+	"ignore_cname_category_matches": {
+		Type:        schema.TypeBool,
+		Optional:    true,
+		Description: "Set to true, to ignore the category matches at CNAME domains in a response.",
+	},
 	"allow_child_bypass": {
 		Type:        schema.TypeBool,
 		Optional:    true,
@@ -192,6 +197,29 @@ var teamsRuleSettings = map[string]*schema.Schema{
 		},
 		Description: "Configure DLP Payload Logging settings for this rule.",
 	},
+	"notification_settings": {
+		Type:     schema.TypeList,
+		MaxItems: 1,
+		Optional: true,
+		Elem: &schema.Resource{
+			Schema: notificationSettings,
+		},
+		Description: "Notification settings on a block rule",
+	},
+	"resolve_dns_through_cloudflare": {
+		Type:        schema.TypeBool,
+		Optional:    true,
+		Description: "Enable sending queries that match the resolver policy to Cloudflare's default 1.1.1.1 DNS resolver. Cannot be set when `dns_resolvers` are specified.",
+	},
+	"dns_resolvers": {
+		Type:     schema.TypeList,
+		MaxItems: 1,
+		Optional: true,
+		Elem: &schema.Resource{
+			Schema: teamsDnsResolverSettings,
+		},
+		Description: "Add your own custom resolvers to route queries that match the resolver policy. Cannot be used when resolve_dns_through_cloudflare is set. DNS queries will route to the address closest to their origin.",
+	},
 }
 
 var payloadLogSettings = map[string]*schema.Schema{
@@ -208,6 +236,24 @@ var untrustedCertSettings = map[string]*schema.Schema{
 		ValidateFunc: validation.StringInSlice(cloudflare.TeamsRulesUntrustedCertActionValues(), false),
 		Optional:     true,
 		Description:  fmt.Sprintf("Action to be taken when the SSL certificate of upstream is invalid. %s", renderAvailableDocumentationValuesStringSlice(cloudflare.TeamsRulesUntrustedCertActionValues())),
+	},
+}
+
+var notificationSettings = map[string]*schema.Schema{
+	"enabled": {
+		Type:        schema.TypeBool,
+		Optional:    true,
+		Description: "Enable notification settings",
+	},
+	"message": {
+		Type:        schema.TypeString,
+		Optional:    true,
+		Description: "Notification content",
+	},
+	"support_url": {
+		Type:        schema.TypeString,
+		Optional:    true,
+		Description: "Support URL to show in the notification",
 	},
 }
 
@@ -276,6 +322,11 @@ var teamsBisoAdminControls = map[string]*schema.Schema{
 		Optional:    true,
 		Description: "Disable upload.",
 	},
+	"disable_clipboard_redirection": {
+		Type:        schema.TypeBool,
+		Optional:    true,
+		Description: "Disable clipboard redirection.",
+	},
 }
 
 var teamsCheckSessionSettings = map[string]*schema.Schema{
@@ -288,5 +339,50 @@ var teamsCheckSessionSettings = map[string]*schema.Schema{
 		Type:        schema.TypeString,
 		Required:    true,
 		Description: "Configure how fresh the session needs to be to be considered valid.",
+	},
+}
+
+var teamsDnsResolverSettings = map[string]*schema.Schema{
+	"ipv4": {
+		Type:     schema.TypeList,
+		Optional: true,
+		Elem: &schema.Resource{
+			Schema: teamsDnsResolverAddress,
+		},
+		MaxItems:    10,
+		Description: "IPv4 resolvers.",
+	},
+	"ipv6": {
+		Type:     schema.TypeList,
+		Optional: true,
+		MaxItems: 10,
+		Elem: &schema.Resource{
+			Schema: teamsDnsResolverAddress,
+		},
+		Description: "IPv6 resolvers.",
+	},
+}
+
+var teamsDnsResolverAddress = map[string]*schema.Schema{
+	"ip": {
+		Type:        schema.TypeString,
+		Required:    true,
+		Description: "The IPv4 or IPv6 address of the upstream resolver.",
+	},
+	"port": {
+		Type:        schema.TypeInt,
+		Optional:    true,
+		Default:     53,
+		Description: "A port number to use for the upstream resolver.",
+	},
+	"vnet_id": {
+		Type:        schema.TypeString,
+		Optional:    true,
+		Description: "specify a virtual network for this resolver. Uses default virtual network id if omitted.",
+	},
+	"route_through_private_network": {
+		Type:        schema.TypeBool,
+		Optional:    true,
+		Description: "Whether to connect to this resolver over a private network. Must be set when `vnet_id` is set.",
 	},
 }

@@ -59,15 +59,16 @@ func resourceCloudflareDevicePostureRuleSchema() map[string]*schema.Schema {
 			},
 		},
 		"input": {
-			Type:     schema.TypeList,
-			Optional: true,
-			Computed: true,
+			Type:        schema.TypeList,
+			Optional:    true,
+			Computed:    true,
+			Description: "Required for all rule types except `warp`, `gateway`, and `tanium`.",
 			Elem: &schema.Resource{
 				Schema: map[string]*schema.Schema{
 					"id": {
 						Type:        schema.TypeString,
 						Optional:    true,
-						Description: "The Teams List id.",
+						Description: "The Teams List id. Required for `serial_number` and `unique_client_id` rule types.",
 					},
 					"path": {
 						Type:        schema.TypeString,
@@ -121,6 +122,11 @@ func resourceCloudflareDevicePostureRuleSchema() map[string]*schema.Schema {
 						Optional:    true,
 						Description: "The operating system semantic version.",
 					},
+					"os_version_extra": {
+						Type:        schema.TypeString,
+						Optional:    true,
+						Description: "Extra version value following the operating system semantic version.",
+					},
 					"operator": {
 						Type:         schema.TypeString,
 						Optional:     true,
@@ -135,13 +141,13 @@ func resourceCloudflareDevicePostureRuleSchema() map[string]*schema.Schema {
 					"connection_id": {
 						Type:        schema.TypeString,
 						Optional:    true,
-						Description: "The workspace one connection id.",
+						Description: "The workspace one or intune connection id.",
 					},
 					"compliance_status": {
 						Type:         schema.TypeString,
 						Optional:     true,
-						ValidateFunc: validation.StringInSlice([]string{"compliant", "noncompliant"}, true),
-						Description:  fmt.Sprintf("The workspace one device compliance status. %s", renderAvailableDocumentationValuesStringSlice([]string{"compliant", "noncompliant"})),
+						ValidateFunc: validation.StringInSlice([]string{"compliant", "noncompliant", "unknown", "conflict", "error", "ingraceperiod"}, true),
+						Description:  fmt.Sprintf("The workspace one or intune device compliance status. `compliant` and `noncompliant` are values supported by both providers. `unknown`, `conflict`, `error`, `ingraceperiod` values are only supported by intune. %s", renderAvailableDocumentationValuesStringSlice([]string{"compliant", "noncompliant", "unknown", "conflict", "error", "ingraceperiod"})),
 					},
 					"os_distro_name": {
 						Type:        schema.TypeString,
@@ -173,6 +179,17 @@ func resourceCloudflareDevicePostureRuleSchema() map[string]*schema.Schema {
 						Optional:     true,
 						ValidateFunc: validation.StringInSlice([]string{">", ">=", "<", "<=", "=="}, true),
 						Description:  fmt.Sprintf("The version comparison operator for crowdstrike. %s", renderAvailableDocumentationValuesStringSlice([]string{">", ">=", "<", "<=", "=="})),
+					},
+					"last_seen": {
+						Type:        schema.TypeString,
+						Optional:    true,
+						Description: "The duration of time that the host was last seen from Crowdstrike. Must be in the format `1h` or `30m`. Valid units are `d`, `h` and `m`.",
+					},
+					"state": {
+						Type:         schema.TypeString,
+						Optional:     true,
+						ValidateFunc: validation.StringInSlice([]string{"online", "offline", "unknown"}, true),
+						Description:  fmt.Sprintf("The host’s current online status from Crowdstrike. %s", renderAvailableDocumentationValuesStringSlice([]string{"online", "offline", "unknown"})),
 					},
 					"count_operator": {
 						Type:         schema.TypeString,
